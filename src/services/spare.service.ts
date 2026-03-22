@@ -1,5 +1,5 @@
 import prisma from '../utils/prisma';
-import * as spareRepo from '../../src/modules/spare/spare.repository';
+import * as spareRepo from '../modules/spare/spare.repository';
 import { SpareInput, SpareUpdateInput } from '../types/spare.types';
 
 export const listSpares = async (query: any) => {

@@ -80,44 +80,64 @@ export const dashboardSummary = async () => {
     const weekAgo = new Date(today);
     weekAgo.setDate(today.getDate() - 6);
 
-    // Total jobs
-    const totalJobs = await prisma.job.count();
-
-    // Today jobs
-    const todayJobs = await prisma.job.count({
-        where: {
-            createdAt: {
-                gte: today,
+    // Run all independent queries in parallel
+    const [
+        totalJobs,
+        todayJobs,
+        activeTechnicians,
+        todayRevenueAgg,
+        weeklyRevenueRaw,
+        spareStockData,
+        lowStockCount,
+        todaySpareUsage,
+        companyEarningsAgg,
+        pendingPayoutsAgg,
+        walletBalancesAgg,
+        recentJobs,
+    ] = await Promise.all([
+        prisma.job.count(),
+        prisma.job.count({ where: { createdAt: { gte: today } } }),
+        prisma.technician.count({ where: { isActive: true } }),
+        prisma.job.aggregate({ _sum: { totalAmount: true }, where: { createdAt: { gte: today } } }),
+        prisma.job.groupBy({
+            by: ['createdAt'],
+            _sum: { totalAmount: true },
+            where: { createdAt: { gte: weekAgo, lte: today } },
+            orderBy: { createdAt: 'asc' },
+        }),
+        prisma.spare.findMany({
+            where: { isActive: true },
+            select: { costPrice: true, stockQty: true },
+        }),
+        prisma.spare.count({
+            where: { stockQty: { lte: prisma.spare.fields.minStock }, isActive: true },
+        }),
+        prisma.spareUsage.aggregate({
+            _sum: { totalPrice: true },
+            where: { createdAt: { gte: today } },
+        }),
+        prisma.job.aggregate({ _sum: { companyShare: true }, where: { status: 'COMPLETED' } }),
+        prisma.payout.aggregate({ _sum: { amount: true }, where: { status: { in: ['PENDING', 'APPROVED'] } } }),
+        prisma.wallet.aggregate({ _sum: { balance: true } }),
+        prisma.job.findMany({
+            where: { isDeleted: false },
+            orderBy: { updatedAt: 'desc' },
+            take: 10,
+            select: {
+                id: true,
+                jobCode: true,
+                customerName: true,
+                status: true,
+                totalAmount: true,
+                updatedAt: true,
+                category: { select: { name: true } },
+                technician: { select: { name: true } },
             },
-        },
-    });
+        }),
+    ]);
 
-    // Active technicians
-    const activeTechnicians = await prisma.technician.count({
-        where: { isActive: true },
-    });
-
-    // Today revenue
-    const todayRevenueAgg = await prisma.job.aggregate({
-        _sum: { totalAmount: true },
-        where: { createdAt: { gte: today } },
-    });
-    const todayRevenue = todayRevenueAgg._sum.totalAmount || 0;
-
-    // Weekly revenue (last 7 days, for chart)
+    // Process weekly revenue
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const weeklyRevenueRaw = await prisma.job.groupBy({
-        by: ['createdAt'],
-        _sum: { totalAmount: true },
-        where: {
-            createdAt: {
-                gte: weekAgo,
-                lte: today,
-            },
-        },
-        orderBy: { createdAt: 'asc' },
-    });
-    // Build array of { day, value } for last 7 days dynamically
     const weeklyRevenue: { day: string; value: number }[] = Array.from({ length: 7 }, (_, i) => {
         const d = new Date(weekAgo);
         d.setDate(weekAgo.getDate() + i);
@@ -132,62 +152,18 @@ export const dashboardSummary = async () => {
         }
     }
 
-    // Total spare stock value
-    const spareStockAgg = await prisma.spare.aggregate({
-        _sum: { stockQty: true },
-    });
-    const totalSpareStockValueAgg = await prisma.spare.aggregate({
-        _sum: { costPrice: true },
-    });
-    const totalSpareStockValue = await prisma.spare.findMany({
-        where: { isActive: true },
-        select: { costPrice: true, stockQty: true },
-    });
-    const totalSpareStock = totalSpareStockValue.reduce((sum, s) => sum + (s.costPrice * s.stockQty), 0);
-
-    // Low stock count
-    const lowStockCount = await prisma.spare.count({
-        where: { stockQty: { lte: prisma.spare.fields.minStock }, isActive: true },
-    });
-
-    // Today's spare usage value
-    const todaySpareUsage = await prisma.spareUsage.aggregate({
-        _sum: { totalPrice: true },
-        where: { createdAt: { gte: today } },
-    });
-    const todaySpareUsageValue = todaySpareUsage._sum.totalPrice || 0;
-
-    // Company earnings (sum of companyShare from completed jobs)
-    const companyEarningsAgg = await prisma.job.aggregate({
-        _sum: { companyShare: true },
-        where: { status: 'COMPLETED' },
-    });
-    const companyEarnings = companyEarningsAgg._sum.companyShare || 0;
-
-    // Total technician payouts pending
-    const pendingPayoutsAgg = await prisma.payout.aggregate({
-        _sum: { amount: true },
-        where: { status: { in: ['PENDING', 'APPROVED'] } },
-    });
-    const pendingPayouts = pendingPayoutsAgg._sum.amount || 0;
-
-    // Total wallet balances
-    const walletBalancesAgg = await prisma.wallet.aggregate({
-        _sum: { balance: true },
-    });
-    const totalWalletBalance = walletBalancesAgg._sum.balance || 0;
-
     return {
         totalJobs,
         todayJobs,
         activeTechnicians,
-        todayRevenue,
+        todayRevenue: todayRevenueAgg._sum.totalAmount || 0,
         weeklyRevenue,
-        totalSpareStockValue: totalSpareStock,
+        totalSpareStockValue: spareStockData.reduce((sum, s) => sum + (s.costPrice * s.stockQty), 0),
         lowStockCount,
-        todaySpareUsageValue,
-        companyEarnings,
-        pendingPayouts,
-        totalWalletBalance,
+        todaySpareUsageValue: todaySpareUsage._sum.totalPrice || 0,
+        companyEarnings: companyEarningsAgg._sum.companyShare || 0,
+        pendingPayouts: pendingPayoutsAgg._sum.amount || 0,
+        totalWalletBalance: walletBalancesAgg._sum.balance || 0,
+        recentJobs,
     };
 };

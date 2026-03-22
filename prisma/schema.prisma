@@ -19,6 +19,8 @@ model Admin {
     isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    @@map("admin")
 }
 
 enum Role {
@@ -36,26 +38,30 @@ model Category {
     technicians TechnicianCategory[]
     jobs        Job[]
     spares      Spare[]
+
+    @@map("category")
 }
 
 model Technician {
-    id         Int                  @id @default(autoincrement())
-    name       String
-    mobile     String               @unique
-    email      String?
-    password   String
-    status     TechnicianStatus     @default(ACTIVE)
-    isActive   Boolean              @default(true)
-    createdAt  DateTime             @default(now())
-    updatedAt  DateTime             @updatedAt
-    experience Int
-    rating     Float
-    categories TechnicianCategory[]
-    jobs       Job[]
+    id                  Int                  @id @default(autoincrement())
+    name                String
+    mobile              String               @unique
+    email               String?
+    password            String
+    status              TechnicianStatus     @default(ACTIVE)
+    isActive            Boolean              @default(true)
+    createdAt           DateTime             @default(now())
+    updatedAt           DateTime             @updatedAt
+    experience          Int
+    rating              Float
+    categories          TechnicianCategory[]
+    jobs                Job[]
     customSpareRequests CustomSpareRequest[]
-    wallet     Wallet?
-    walletTransactions WalletTransaction[]
-    payouts    Payout[]
+    wallet              Wallet?
+    walletTransactions  WalletTransaction[]
+    payouts             Payout[]
+
+    @@map("technician")
 }
 
 enum TechnicianStatus {
@@ -74,6 +80,7 @@ model TechnicianCategory {
     categoryId   Int
 
     @@unique([technicianId, categoryId])
+    @@map("techniciancategory")
 }
 
 model Job {
@@ -103,6 +110,8 @@ model Job {
     updatedAt       DateTime     @updatedAt
     payments        Payment[]
     spareUsages     SpareUsage[]
+
+    @@map("job")
 }
 
 model Spare {
@@ -120,6 +129,8 @@ model Spare {
     updatedAt    DateTime        @updatedAt
     usages       SpareUsage[]
     stockLogs    SpareStockLog[]
+
+    @@map("spare")
 }
 
 model SpareUsage {
@@ -132,6 +143,8 @@ model SpareUsage {
 
     job   Job   @relation(fields: [jobId], references: [id])
     spare Spare @relation(fields: [spareId], references: [id])
+
+    @@map("spareusage")
 }
 
 model SpareStockLog {
@@ -143,42 +156,50 @@ model SpareStockLog {
     createdAt DateTime @default(now())
 
     spare Spare @relation(fields: [spareId], references: [id])
+
+    @@map("sparestocklog")
 }
 
 model Payment {
-    id            Int      @id @default(autoincrement())
-    job           Job      @relation(fields: [jobId], references: [id])
+    id            Int       @id @default(autoincrement())
+    job           Job       @relation(fields: [jobId], references: [id])
     jobId         Int
     amount        Float
-    method        String   // CASH / UPI / ONLINE
-    status        String   @default("PENDING") // PENDING / PAID / FAILED
+    method        String // CASH / UPI / ONLINE
+    status        String    @default("PENDING") // PENDING / PAID / FAILED
     transactionId String?
     paidAt        DateTime?
-    createdAt     DateTime @default(now())
-    updatedAt     DateTime @updatedAt
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
+
+    @@map("payment")
 }
 
 model Wallet {
-    id           Int        @id @default(autoincrement())
-    technicianId Int        @unique
-    balance      Float      @default(0)
-    createdAt    DateTime   @default(now())
-    updatedAt    DateTime   @updatedAt
+    id           Int      @id @default(autoincrement())
+    technicianId Int      @unique
+    balance      Float    @default(0)
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 
     technician Technician @relation(fields: [technicianId], references: [id])
+
+    @@map("wallet")
 }
 
 model WalletTransaction {
     id           Int      @id @default(autoincrement())
     technicianId Int
     amount       Float
-    type         String   // CREDIT / DEBIT
-    source       String   // JOB / PAYOUT
+    type         String // CREDIT / DEBIT
+    source       String // JOB / PAYOUT
     referenceId  Int?
     description  String?
     createdAt    DateTime @default(now())
 
     technician Technician @relation(fields: [technicianId], references: [id])
+
+    @@map("wallettransaction")
 }
 
 model Payout {
@@ -191,6 +212,8 @@ model Payout {
     updatedAt    DateTime @updatedAt
 
     technician Technician @relation(fields: [technicianId], references: [id])
+
+    @@map("payout")
 }
 
 enum JobStatus {
@@ -205,17 +228,19 @@ enum JobStatus {
 }
 
 model CustomSpareRequest {
-    id           Int        @id @default(autoincrement())
+    id           Int      @id @default(autoincrement())
     technicianId Int
     jobId        Int?
     name         String
     category     String
     reason       String
     image        String?
-    status       String     @default("PENDING") // PENDING, APPROVED, REJECTED
+    status       String   @default("PENDING") // PENDING, APPROVED, REJECTED
     adminNote    String?
-    createdAt    DateTime   @default(now())
-    updatedAt    DateTime   @updatedAt
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 
-    technician   Technician @relation(fields: [technicianId], references: [id])
+    technician Technician @relation(fields: [technicianId], references: [id])
+
+    @@map("customsparerequest")
 }

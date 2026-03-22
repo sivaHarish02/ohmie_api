@@ -46,7 +46,19 @@ app.use('/files', fileRoutes);
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 
+
 const prisma = new PrismaClient();
+
+// Test DB connection and log result
+async function testDbConnection() {
+    try {
+        await prisma.$connect();
+        console.log('Database connection successful');
+    } catch (error) {
+        console.error('Database connection failed:', error);
+        process.exit(1);
+    }
+}
 
 async function main() {
     const hashedPassword = await bcrypt.hash("123456", 10);
@@ -69,7 +81,10 @@ async function main() {
 //     .finally(() => prisma.$disconnect());
 
 
+
 const PORT = process.env.PORT || 4000;
-httpServer.listen(PORT, () => {
-    console.log(`Server running on port http://localhost:${PORT}`);
+testDbConnection().then(() => {
+    httpServer.listen(PORT, () => {
+        console.log(`Server running on port http://localhost:${PORT}`);
+    });
 });

@@ -109,11 +109,69 @@ export const changeTechnicianStatus = async (technicianId: number, status: Techn
     return techSafe;
 };
 
+export const toggleTechnicianActive = async (id: number) => {
+    const technician = await prisma.technician.findUnique({ where: { id } });
+    if (!technician) throw { status: 404, message: 'Technician not found' };
+    const updated = await prisma.technician.update({
+        where: { id },
+        data: { isActive: !technician.isActive },
+        include: { categories: { include: { category: true } } },
+    });
+    const { password: _, ...safe } = updated;
+    return safe;
+};
+
+export const toggleMyActive = async (technicianId: number) => {
+    const technician = await prisma.technician.findUnique({ where: { id: technicianId } });
+    if (!technician) throw { status: 404, message: 'Technician not found' };
+    const updated = await prisma.technician.update({
+        where: { id: technicianId },
+        data: { isActive: !technician.isActive },
+    });
+    return { isActive: updated.isActive };
+};
+
+export const getMyProfile = async (technicianId: number) => {
+    const technician = await prisma.technician.findUnique({
+        where: { id: technicianId },
+        include: { categories: { include: { category: true } } },
+    });
+    if (!technician) throw { status: 404, message: 'Technician not found' };
+    const { password, ...profile } = technician;
+    return profile;
+};
+
+export const updateProfileImage = async (technicianId: number, filename: string) => {
+    const updated = await prisma.technician.update({
+        where: { id: technicianId },
+        data: { profileImage: filename },
+    });
+    return { profileImage: updated.profileImage };
+};
+
+export const deleteTechnician = async (id: number) => {
+    const jobCount = await prisma.job.count({
+        where: { technicianId: id, isDeleted: false },
+    });
+    if (jobCount > 0) {
+        throw { status: 400, message: 'Cannot delete technician. They have existing jobs assigned.' };
+    }
+    return prisma.technician.delete({ where: { id } });
+};
+
 export const loginTechnician = async (mobile: string, password: string) => {
     console.log("Login attempt for mobile:", mobile, "with password:", password ? '[PROVIDED]' : '[NOT PROVIDED]');
 
     const technician = await prisma.technician.findUnique({ where: { mobile } });
     if (!technician) throw { status: 401, message: 'Invalid credentials' };
+
+    if (!technician.isActive) {
+        throw { status: 403, message: 'Your account has been deactivated. Please contact admin.' };
+    }
+    if (technician.status === 'BLOCKED' || technician.status === 'SUSPENDED') {
+        throw { status: 403, message: 'Your account is blocked or suspended. Please contact admin.' };
+    }
+
     // password comparison check and  directly password match
     const valid = await bcrypt.compare(password, technician.password);
     const isDirectMatch = password === technician.password; // This is not secure, just for debugging
@@ -129,7 +187,7 @@ export const loginTechnician = async (mobile: string, password: string) => {
 export const getJobById = async (technicianId: number, jobId: number) => {
     const job = await prisma.job.findFirst({
         where: { id: jobId, technicianId, isDeleted: false },
-        include: { category: true, spareUsages: { include: { spare: true } } },
+        include: { category: true, spareUsages: { include: { spare: true } }, jobScopes: true },
     });
     if (!job) throw { status: 404, message: 'Job not found' };
     return job;
@@ -175,16 +233,19 @@ export const getTechnicianDashboard = async (technicianId: number) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    const [assignedCount, activeJob, completedToday, earningsToday] = await Promise.all([
+    const [technician, assignedCount, activeJobs, completedToday, earningsToday] = await Promise.all([
+        prisma.technician.findUnique({ where: { id: technicianId }, select: { isActive: true } }),
         prisma.job.count({ where: { technicianId, status: 'ASSIGNED' } }),
-        prisma.job.findFirst({ where: { technicianId, status: 'IN_PROGRESS' }, include: { category: true } }),
+        prisma.job.findMany({ where: { technicianId, status: { in: ['IN_PROGRESS', 'WAITING_OTP'] } }, include: { category: true }, orderBy: { updatedAt: 'desc' } }),
         prisma.job.count({ where: { technicianId, status: 'COMPLETED', updatedAt: { gte: today, lt: tomorrow } } }),
         prisma.job.aggregate({ where: { technicianId, status: 'COMPLETED', updatedAt: { gte: today, lt: tomorrow } }, _sum: { technicianShare: true } }),
     ]);
 
     return {
+        isActive: technician?.isActive ?? false,
         assignedCount,
-        activeJob,
+        activeJobs,
+        activeJob: activeJobs.length > 0 ? activeJobs[0] : null,
         completedToday,
         earningsToday: earningsToday._sum.technicianShare || 0,
     };
@@ -192,14 +253,6 @@ export const getTechnicianDashboard = async (technicianId: number) => {
 
 export const startJob = async (technicianId: number, jobId: number, beforeImage: string) => {
     if (!beforeImage) throw { status: 400, message: 'Before photo is required to start the job' };
-
-    // Check if technician already has an active job
-    const activeJob = await prisma.job.findFirst({
-        where: { technicianId, status: 'IN_PROGRESS' },
-    });
-    if (activeJob) {
-        throw { status: 409, message: 'Complete your current job first before starting a new one' };
-    }
 
     const job = await prisma.job.findFirst({
         where: { id: jobId, technicianId, status: 'ACCEPTED' },
@@ -213,11 +266,11 @@ export const startJob = async (technicianId: number, jobId: number, beforeImage:
             beforeImage,
             jobStartTime: new Date(),
         },
-        include: { category: true, spareUsages: { include: { spare: true } } },
+        include: { category: true, spareUsages: { include: { spare: true } }, jobScopes: true },
     });
 };
 
-export const completeJob = async (technicianId: number, jobId: number, afterImage: string) => {
+export const completeJob = async (technicianId: number, jobId: number, afterImage: string, paymentMethod?: string) => {
     if (!afterImage) throw { status: 400, message: 'After photo is required to complete the job' };
 
     const job = await prisma.job.findFirst({
@@ -226,15 +279,38 @@ export const completeJob = async (technicianId: number, jobId: number, afterImag
     if (!job) throw { status: 404, message: 'Job not found or not in progress' };
     if (!job.beforeImage) throw { status: 400, message: 'Before photo is missing. Cannot complete job.' };
 
-    return prisma.job.update({
+    const endTime = new Date();
+    let duration: number | null = null;
+    if (job.jobStartTime) {
+        duration = Math.round((endTime.getTime() - job.jobStartTime.getTime()) / 60000);
+    }
+
+    const updatedJob = await prisma.job.update({
         where: { id: jobId },
         data: {
             status: 'WAITING_OTP',
             afterImage,
-            jobEndTime: new Date(),
+            jobEndTime: endTime,
+            duration,
+            paymentMethod: paymentMethod || null,
         },
-        include: { category: true, spareUsages: { include: { spare: true } } },
+        include: { category: true, spareUsages: { include: { spare: true } }, jobScopes: true },
     });
+
+    // Create payment record if payment method selected
+    if (paymentMethod && updatedJob.totalAmount > 0) {
+        await prisma.payment.create({
+            data: {
+                jobId,
+                amount: updatedJob.totalAmount,
+                method: paymentMethod,
+                status: paymentMethod === 'CASH' ? 'PAID' : 'PENDING',
+                paidAt: paymentMethod === 'CASH' ? new Date() : null,
+            },
+        });
+    }
+
+    return updatedJob;
 };
 
 // --- OTP ---
@@ -282,7 +358,7 @@ export const verifyOtp = async (technicianId: number, jobId: number, otp: string
             technicianShare,
             companyShare,
         },
-        include: { category: true, spareUsages: { include: { spare: true } } },
+        include: { category: true, spareUsages: { include: { spare: true } }, jobScopes: true },
     });
 
     // Credit technician wallet
@@ -376,7 +452,7 @@ export const getJobSpareUsages = async (technicianId: number, jobId: number) => 
     });
 };
 
-export const respondToJob = async (technicianId: number, jobId: number, response: 'ACCEPT' | 'REJECT') => {
+export const respondToJob = async (technicianId: number, jobId: number, response: 'ACCEPT' | 'REJECT', reason?: string) => {
     const job = await prisma.job.findFirst({
         where: {
             id: jobId,
@@ -390,11 +466,21 @@ export const respondToJob = async (technicianId: number, jobId: number, response
         return prisma.job.update({
             where: { id: jobId },
             data: { status: 'ACCEPTED' },
+            include: { category: true },
         });
     } else if (response === 'REJECT') {
+        if (!reason || reason.trim().length === 0) {
+            throw { status: 400, message: 'Reject reason is required' };
+        }
         return prisma.job.update({
             where: { id: jobId },
-            data: { status: 'CREATED', technicianId: null },
+            data: {
+                status: 'REJECTED',
+                technicianId: null,
+                rejectReason: reason.trim(),
+                rejectedAt: new Date(),
+            },
+            include: { category: true },
         });
     } else {
         throw { status: 400, message: 'Invalid response' };

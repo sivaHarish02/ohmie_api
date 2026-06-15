@@ -37,3 +37,29 @@ export const uploadJobImage = multer({
     fileFilter,
     limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
 });
+
+// --- Profile image upload ---
+
+const profileUploadDir = path.join(__dirname, '..', '..', 'uploads', 'profile');
+
+if (!fs.existsSync(profileUploadDir)) {
+    fs.mkdirSync(profileUploadDir, { recursive: true });
+}
+
+const profileStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => {
+        cb(null, profileUploadDir);
+    },
+    filename: (req: any, file, cb) => {
+        const techId = req.user?.id || 'unknown';
+        const timestamp = Date.now();
+        const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+        cb(null, `tech_${techId}_${timestamp}${ext}`);
+    },
+});
+
+export const uploadProfileImage = multer({
+    storage: profileStorage,
+    fileFilter,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+});

@@ -23,7 +23,17 @@ export const listSpares = async (req: Request, res: Response) => {
         const where: any = {};
         if (search) where.name = { contains: String(search), };
         if (lowStock) where.stockQty = { lte: { minStock: true }, };
-        const spares = await spareService.listSpares({ where, orderBy: { id: 'desc' }, skip: (Number(page) - 1) * Number(limit), take: Number(limit) });
+        const spares = await spareService.listSpares({
+            where,
+            include: {
+                category: { select: { id: true, name: true } },
+                spareCategory: { select: { id: true, name: true } },
+                brand: { select: { id: true, name: true } },
+            },
+            orderBy: { id: 'desc' },
+            skip: (Number(page) - 1) * Number(limit),
+            take: Number(limit),
+        });
         // console.log("Spares fetched:", spares.length);
         res.json(spares);
     } catch (e: any) {

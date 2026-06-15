@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as technicianService from '../services/technician.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { log } from 'console';
-import { emitJobStatusUpdate, emitSpareRequested, emitOtpSent, emitPaymentUpdate } from '../socket/socket.handler';
+import { emitJobStatusUpdate, emitSpareRequested, emitOtpSent, emitPaymentUpdate, emitJobRejected, emitJobStarted, emitJobCompleted } from '../socket/socket.handler';
 
 export const createTechnician = async (req: Request, res: Response) => {
     try {
@@ -84,8 +84,11 @@ export const respondToJob = async (req: AuthRequest, res: Response) => {
         if (!technicianId) {
             return res.status(400).json({ error: 'Technician ID is required' });
         }
-        const { jobId, response } = req.body;
-        const job = await technicianService.respondToJob(technicianId, jobId, response);
+        const { jobId, response, reason } = req.body;
+        const job = await technicianService.respondToJob(technicianId, jobId, response, reason);
+        if (response === 'REJECT') {
+            emitJobRejected(job, technicianId, reason);
+        }
         emitJobStatusUpdate(job);
         res.status(200).json({ message: 'Response recorded', job });
     } catch (error: any) {
@@ -133,8 +136,10 @@ export const startJob = async (req: AuthRequest, res: Response) => {
         const beforeImage = req.file.filename;
         const job = await technicianService.startJob(technicianId, jobId, beforeImage);
         emitJobStatusUpdate(job);
+        emitJobStarted(job);
         res.status(200).json({ message: 'Job started', job });
     } catch (error: any) {
+        log(`Error starting job: ${error.message}`);
         res.status(error.status || 400).json({ error: error.message || 'Failed to start job' });
     }
 };
@@ -150,9 +155,19 @@ export const completeJob = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ error: 'After image is required' });
         }
         const afterImage = req.file.filename;
-        const job = await technicianService.completeJob(technicianId, jobId, afterImage);
+        const paymentMethod = req.body.paymentMethod;
+        const job = await technicianService.completeJob(technicianId, jobId, afterImage, paymentMethod);
         emitJobStatusUpdate(job);
-        res.status(200).json({ message: 'Job moved to OTP verification', job });
+
+        // Auto-generate OTP and send to customer
+        const otpResult = await technicianService.generateOtp(jobId);
+        emitOtpSent(technicianId, { jobId, jobCode: otpResult.jobCode });
+
+        res.status(200).json({
+            message: 'Job moved to OTP verification',
+            job,
+            otp: otpResult.otpCode, // For development: passed to technician
+        });
     } catch (error: any) {
         res.status(error.status || 400).json({ error: error.message || 'Failed to complete job' });
     }
@@ -180,6 +195,7 @@ export const verifyOtp = async (req: AuthRequest, res: Response) => {
         const { jobId, otp } = req.body;
         const job = await technicianService.verifyOtp(technicianId, jobId, otp);
         emitJobStatusUpdate(job);
+        emitJobCompleted(job);
         emitPaymentUpdate(technicianId, { jobId: job.id, jobCode: job.jobCode, status: 'COMPLETED' });
         res.status(200).json({ message: 'OTP verified, job completed', job });
     } catch (error: any) {
@@ -223,6 +239,8 @@ export const getJobSpares = async (req: AuthRequest, res: Response) => {
         }
         const jobId = Number(req.params.jobId);
         const usages = await technicianService.getJobSpareUsages(technicianId, jobId);
+        console.log("usages", usages.length);
+
         res.status(200).json({ usages });
     } catch (error: any) {
         res.status(error.status || 400).json({ error: error.message || 'Failed to fetch spare usages' });
@@ -259,5 +277,64 @@ export const unblockTechnician = async (req: Request, res: Response) => {
         res.status(200).json({ message: 'Technician unblocked', technician });
     } catch (error: any) {
         res.status(error.status || 400).json({ error: error.message || 'Unblock technician failed' });
+    }
+};
+
+// Admin: toggle technician active/inactive
+export const toggleTechnicianActive = async (req: Request, res: Response) => {
+    try {
+        const technician = await technicianService.toggleTechnicianActive(Number(req.params.id));
+        res.status(200).json({ message: 'Technician active status toggled', technician });
+    } catch (error: any) {
+        res.status(error.status || 400).json({ error: error.message || 'Toggle active failed' });
+    }
+};
+
+// Technician: toggle own active/inactive status
+export const toggleMyActive = async (req: AuthRequest, res: Response) => {
+    try {
+        const technicianId = req.user?.id;
+        if (!technicianId) {
+            return res.status(400).json({ error: 'Technician ID is required' });
+        }
+        const result = await technicianService.toggleMyActive(technicianId);
+        res.status(200).json({ message: 'Status updated', isActive: result.isActive });
+    } catch (error: any) {
+        res.status(error.status || 400).json({ error: error.message || 'Toggle active failed' });
+    }
+};
+
+// Technician: get own profile
+export const getMyProfile = async (req: AuthRequest, res: Response) => {
+    try {
+        const technicianId = req.user?.id;
+        if (!technicianId) return res.status(400).json({ error: 'Technician ID required' });
+        const profile = await technicianService.getMyProfile(technicianId);
+        res.status(200).json(profile);
+    } catch (error: any) {
+        res.status(error.status || 400).json({ error: error.message || 'Get profile failed' });
+    }
+};
+
+// Technician: upload profile image
+export const uploadProfileImage = async (req: AuthRequest, res: Response) => {
+    try {
+        const technicianId = req.user?.id;
+        if (!technicianId) return res.status(400).json({ error: 'Technician ID required' });
+        if (!req.file) return res.status(400).json({ error: 'No image file provided' });
+        const result = await technicianService.updateProfileImage(technicianId, req.file.filename);
+        res.status(200).json({ message: 'Profile image updated', profileImage: result.profileImage });
+    } catch (error: any) {
+        res.status(error.status || 400).json({ error: error.message || 'Upload failed' });
+    }
+};
+
+// Admin: delete technician (with job protection)
+export const deleteTechnician = async (req: Request, res: Response) => {
+    try {
+        await technicianService.deleteTechnician(Number(req.params.id));
+        res.status(200).json({ message: 'Technician deleted' });
+    } catch (error: any) {
+        res.status(error.status || 400).json({ error: error.message || 'Delete technician failed' });
     }
 };

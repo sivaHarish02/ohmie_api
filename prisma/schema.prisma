@@ -19,8 +19,6 @@ model Admin {
     isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-
-    @@map("admin")
 }
 
 enum Role {
@@ -29,17 +27,16 @@ enum Role {
 }
 
 model Category {
-    id          Int                  @id @default(autoincrement())
-    name        String               @unique
-    icon        String?
-    isActive    Boolean              @default(true)
-    createdAt   DateTime             @default(now())
-    updatedAt   DateTime             @updatedAt
-    technicians TechnicianCategory[]
-    jobs        Job[]
-    spares      Spare[]
-
-    @@map("category")
+    id              Int                  @id @default(autoincrement())
+    name            String               @unique
+    icon            String?
+    isActive        Boolean              @default(true)
+    createdAt       DateTime             @default(now())
+    updatedAt       DateTime             @updatedAt
+    technicians     TechnicianCategory[]
+    jobs            Job[]
+    spares          Spare[]
+    spareCategories SpareCategory[]
 }
 
 model Technician {
@@ -48,6 +45,7 @@ model Technician {
     mobile              String               @unique
     email               String?
     password            String
+    profileImage        String?
     status              TechnicianStatus     @default(ACTIVE)
     isActive            Boolean              @default(true)
     createdAt           DateTime             @default(now())
@@ -60,8 +58,6 @@ model Technician {
     wallet              Wallet?
     walletTransactions  WalletTransaction[]
     payouts             Payout[]
-
-    @@map("technician")
 }
 
 enum TechnicianStatus {
@@ -80,7 +76,18 @@ model TechnicianCategory {
     categoryId   Int
 
     @@unique([technicianId, categoryId])
-    @@map("techniciancategory")
+}
+
+model Customer {
+    id        Int       @id @default(autoincrement())
+    name      String?
+    mobile    String    @unique
+    otpCode   String?
+    otpExpiry DateTime?
+    isActive  Boolean   @default(true)
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    jobs      Job[]
 }
 
 model Job {
@@ -89,11 +96,15 @@ model Job {
     customerName    String
     customerPhone   String
     address         String
+    latitude        Decimal?     @db.Decimal(10, 8)
+    longitude       Decimal?     @db.Decimal(11, 8)
     description     String
     category        Category     @relation(fields: [categoryId], references: [id])
     categoryId      Int
     technician      Technician?  @relation(fields: [technicianId], references: [id])
     technicianId    Int?
+    customer        Customer?    @relation(fields: [customerId], references: [id])
+    customerId      Int?
     status          JobStatus    @default(CREATED)
     scheduleTime    DateTime
     totalAmount     Float        @default(0)
@@ -104,33 +115,60 @@ model Job {
     afterImage      String?
     jobStartTime    DateTime?
     jobEndTime      DateTime?
+    duration        Int?
+    rejectReason    String?
+    rejectedAt      DateTime?
+    paymentMethod   String?
     otpCode         String?
     otpVerified     Boolean      @default(false)
     createdAt       DateTime     @default(now())
     updatedAt       DateTime     @updatedAt
     payments        Payment[]
     spareUsages     SpareUsage[]
-
-    @@map("job")
+    jobScopes       JobScope[]
 }
 
 model Spare {
-    id           Int             @id @default(autoincrement())
-    name         String
-    sku          String          @unique
-    category     Category?       @relation(fields: [categoryId], references: [id])
-    categoryId   Int?
-    costPrice    Float
-    sellingPrice Float
-    stockQty     Int             @default(0)
-    minStock     Int             @default(5)
-    isActive     Boolean         @default(true)
-    createdAt    DateTime        @default(now())
-    updatedAt    DateTime        @updatedAt
-    usages       SpareUsage[]
-    stockLogs    SpareStockLog[]
+    id              Int             @id @default(autoincrement())
+    name            String
+    sku             String          @unique
+    category        Category?       @relation(fields: [categoryId], references: [id])
+    categoryId      Int?
+    spareCategory   SpareCategory?  @relation(fields: [spareCategoryId], references: [id])
+    spareCategoryId Int?
+    brand           Brand?          @relation(fields: [brandId], references: [id])
+    brandId         Int?
+    costPrice       Float
+    sellingPrice    Float
+    stockQty        Int             @default(0)
+    minStock        Int             @default(5)
+    isActive        Boolean         @default(true)
+    createdAt       DateTime        @default(now())
+    updatedAt       DateTime        @updatedAt
+    usages          SpareUsage[]
+    stockLogs       SpareStockLog[]
+}
 
-    @@map("spare")
+model SpareCategory {
+    id            Int      @id @default(autoincrement())
+    name          String
+    jobCategory   Category @relation(fields: [jobCategoryId], references: [id])
+    jobCategoryId Int
+    isActive      Boolean  @default(true)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+    spares        Spare[]
+
+    @@unique([name, jobCategoryId])
+}
+
+model Brand {
+    id        Int      @id @default(autoincrement())
+    name      String   @unique
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    spares    Spare[]
 }
 
 model SpareUsage {
@@ -143,8 +181,6 @@ model SpareUsage {
 
     job   Job   @relation(fields: [jobId], references: [id])
     spare Spare @relation(fields: [spareId], references: [id])
-
-    @@map("spareusage")
 }
 
 model SpareStockLog {
@@ -156,8 +192,6 @@ model SpareStockLog {
     createdAt DateTime @default(now())
 
     spare Spare @relation(fields: [spareId], references: [id])
-
-    @@map("sparestocklog")
 }
 
 model Payment {
@@ -171,8 +205,6 @@ model Payment {
     paidAt        DateTime?
     createdAt     DateTime  @default(now())
     updatedAt     DateTime  @updatedAt
-
-    @@map("payment")
 }
 
 model Wallet {
@@ -183,8 +215,6 @@ model Wallet {
     updatedAt    DateTime @updatedAt
 
     technician Technician @relation(fields: [technicianId], references: [id])
-
-    @@map("wallet")
 }
 
 model WalletTransaction {
@@ -198,8 +228,6 @@ model WalletTransaction {
     createdAt    DateTime @default(now())
 
     technician Technician @relation(fields: [technicianId], references: [id])
-
-    @@map("wallettransaction")
 }
 
 model Payout {
@@ -212,8 +240,6 @@ model Payout {
     updatedAt    DateTime @updatedAt
 
     technician Technician @relation(fields: [technicianId], references: [id])
-
-    @@map("payout")
 }
 
 enum JobStatus {
@@ -225,6 +251,7 @@ enum JobStatus {
     WAITING_OTP
     COMPLETED
     CLOSED
+    REJECTED
 }
 
 model CustomSpareRequest {
@@ -241,6 +268,46 @@ model CustomSpareRequest {
     updatedAt    DateTime @updatedAt
 
     technician Technician @relation(fields: [technicianId], references: [id])
+}
 
-    @@map("customsparerequest")
+model CompanyPaymentSettings {
+    id           Int      @id @default(autoincrement())
+    upiId        String?
+    mobileNumber String?
+    qrImage      String?
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+model ScopeOfWork {
+    id            Int         @id @default(autoincrement())
+    name          String
+    jobCategoryId Int
+    status        ScopeStatus @default(PENDING)
+    createdBy     CreatedBy   @default(TECHNICIAN)
+    createdAt     DateTime    @default(now())
+    jobScopes     JobScope[]
+
+    @@unique([name, jobCategoryId])
+}
+
+enum ScopeStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+enum CreatedBy {
+    ADMIN
+    TECHNICIAN
+}
+
+model JobScope {
+    id            Int      @id @default(autoincrement())
+    jobId         Int
+    scopeOfWorkId Int
+    createdAt     DateTime @default(now())
+
+    job   Job         @relation(fields: [jobId], references: [id])
+    scope ScopeOfWork @relation(fields: [scopeOfWorkId], references: [id])
 }

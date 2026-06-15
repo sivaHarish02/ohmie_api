@@ -8,6 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 // In-memory connection store
 const technicianSockets = new Map<number, string>(); // technicianId → socketId
 const adminSockets = new Map<number, string>();       // adminId → socketId
+const customerSockets = new Map<number, string>();    // customerId → socketId
 
 let io: Server;
 
@@ -44,6 +45,10 @@ export const initSocketServer = (httpServer: HttpServer) => {
             technicianSockets.set(userId, socket.id);
             socket.join(`technician_${userId}`);
             console.log(`[Socket] Technician ${userId} connected (${socket.id})`);
+        } else if (role === 'CUSTOMER') {
+            customerSockets.set(userId, socket.id);
+            socket.join(`customer_${userId}`);
+            console.log(`[Socket] Customer ${userId} connected (${socket.id})`);
         } else {
             adminSockets.set(userId, socket.id);
             socket.join('admins');
@@ -58,6 +63,9 @@ export const initSocketServer = (httpServer: HttpServer) => {
             if (role === 'TECHNICIAN') {
                 technicianSockets.delete(userId);
                 console.log(`[Socket] Technician ${userId} disconnected`);
+            } else if (role === 'CUSTOMER') {
+                customerSockets.delete(userId);
+                console.log(`[Socket] Customer ${userId} disconnected`);
             } else {
                 adminSockets.delete(userId);
                 console.log(`[Socket] Admin ${userId} disconnected`);
@@ -91,4 +99,9 @@ export const emitToAll = (event: string, data: any) => {
     io.emit(event, data);
 };
 
-export { technicianSockets, adminSockets };
+export const emitToCustomer = (customerId: number, event: string, data: any) => {
+    if (!io) return;
+    io.to(`customer_${customerId}`).emit(event, data);
+};
+
+export { technicianSockets, adminSockets, customerSockets };

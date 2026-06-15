@@ -8,10 +8,15 @@ import technicianRoutes from './routes/technician.routes';
 import jobRoutes from './routes/job.routes';
 import revenueRoutes from './routes/revenue.routes';
 import spareRoutes from './routes/spare.routes';
+import spareCategoryRoutes from './routes/spareCategory.routes';
+import brandRoutes from './routes/brand.routes';
 import customSpareRoutes from './modules/customSpare/routes';
 import paymentRoutes from './routes/payment.routes';
 import walletRoutes from './routes/wallet.routes';
 import fileRoutes from './routes/file.routes';
+import companySettingsRoutes from './routes/companySettings.routes';
+import scopeOfWorkRoutes from './routes/scopeOfWork.routes';
+import customerRoutes from './routes/customer.routes';
 import { initSocketServer } from './socket/socket.server';
 
 
@@ -39,13 +44,17 @@ app.use('/admin/technicians', technicianRoutes);
 app.use('/admin/job', jobRoutes);
 app.use('/admin/revenue', revenueRoutes);
 app.use('/admin/spares', spareRoutes);
+app.use('/spare-categories', spareCategoryRoutes);
+app.use('/brands', brandRoutes);
 app.use('/custom-spare', customSpareRoutes);
 app.use('/admin/payment', paymentRoutes);
 app.use('/wallet', walletRoutes);
 app.use('/files', fileRoutes);
+app.use('/admin/company-settings', companySettingsRoutes);
+app.use('/scope-of-work', scopeOfWorkRoutes);
+app.use('/customer', customerRoutes);
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-
 
 const prisma = new PrismaClient();
 
@@ -66,7 +75,7 @@ async function main() {
     await prisma.admin.create({
         data: {
             name: "Super Admin",
-            email: "admin@example.com",
+            email: "admin@gmail.com",
             mobile: "9876543210",
             password: hashedPassword,
             role: "SUPER_ADMIN",
@@ -79,7 +88,6 @@ async function main() {
 // main()
 //     .catch(console.error)
 //     .finally(() => prisma.$disconnect());
-
 
 
 const PORT = process.env.PORT || 4000;

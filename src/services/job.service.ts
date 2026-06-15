@@ -90,21 +90,23 @@ export const assignTechnician = async (jobId: number, technicianId: number) => {
         throw { status: 400, message: `Cannot assign technician when job is ${job.status}` };
     }
 
-    const technician = await prisma.technician.findFirst({
-        where: {
-            id: technicianId,
-            categories: {
-                some: { categoryId: job.categoryId },
-            },
-        },
-    });
-    if (!technician) throw { status: 400, message: 'Technician does not match job category or does not exist' };
+    // const technician = await prisma.technician.findFirst({
+    //     where: {
+    //         id: technicianId,
+    //         categories: {
+    //             some: { categoryId: job.categoryId },
+    //         },
+    //     },
+    // });
+    // if (!technician) throw { status: 400, message: 'Technician does not match job category or does not exist' };
 
     return prisma.job.update({
         where: { id: jobId },
         data: {
             technicianId,
             status: 'ASSIGNED',
+            rejectReason: null,
+            rejectedAt: null,
         },
         include: {
             category: true,

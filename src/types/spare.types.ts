@@ -4,6 +4,8 @@ export interface SpareInput {
     // either provide existing category id or category name (will be upserted)
     categoryId?: number;
     category?: string;
+    spareCategoryId?: number;
+    brandId?: number;
     costPrice: number;
     sellingPrice: number;
     stockQty?: number;
@@ -15,6 +17,8 @@ export interface SpareUpdateInput {
     sku?: string;
     categoryId?: number;
     category?: string;
+    spareCategoryId?: number;
+    brandId?: number;
     costPrice?: number;
     sellingPrice?: number;
     stockQty?: number;

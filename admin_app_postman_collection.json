@@ -1,0 +1,1275 @@
+{
+    "info": {
+        "_postman_id": "8b24df8f-cdbf-4dbb-9f35-53e7ac8d6837",
+        "name": "Ohmie Admin App APIs",
+        "description": "Postman documentation collection for implemented Admin App APIs only (derived from src/routes and src/modules).",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Register Admin",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Super Admin\",\n  \"email\": \"admin@ohmie.com\",\n  \"mobile\": \"9876543210\",\n  \"password\": \"StrongPass123\",\n  \"role\": \"ADMIN\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "register"
+                            ]
+                        },
+                        "description": "Create a new admin account. Auth not required."
+                    }
+                },
+                {
+                    "name": "Login Admin",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@ohmie.com\",\n  \"password\": \"StrongPass123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "login"
+                            ]
+                        },
+                        "description": "Login admin and receive JWT token."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "item": [
+                {
+                    "name": "Dashboard Summary",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/dashboard-summary",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "dashboard-summary"
+                            ]
+                        },
+                        "description": "Get admin dashboard KPIs."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Category",
+            "item": [
+                {
+                    "name": "List Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "categories"
+                            ]
+                        },
+                        "description": "List categories."
+                    }
+                },
+                {
+                    "name": "Create Category",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Electrical\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "categories"
+                            ]
+                        },
+                        "description": "Create category."
+                    }
+                },
+                {
+                    "name": "Get Category By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/categories/{{category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        },
+                        "description": "Get category by ID (implemented extra endpoint)."
+                    }
+                },
+                {
+                    "name": "Update Category",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Electrical Services\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/categories/{{category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        },
+                        "description": "Update category by ID."
+                    }
+                },
+                {
+                    "name": "Delete Category",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/categories/{{category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        },
+                        "description": "Soft delete category."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Technician",
+            "item": [
+                {
+                    "name": "List Technicians",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/technicians",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "technicians"
+                            ]
+                        },
+                        "description": "List all technicians."
+                    }
+                },
+                {
+                    "name": "Create Technician",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Ravi Kumar\",\n  \"mobile\": \"9000000001\",\n  \"email\": \"ravi@ohmie.com\",\n  \"password\": \"Tech@123\",\n  \"categoryIds\": [1, 2],\n  \"experience\": 4,\n  \"rating\": 4.8\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/technicians",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "technicians"
+                            ]
+                        },
+                        "description": "Create technician with category mapping."
+                    }
+                },
+                {
+                    "name": "Update Technician",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Ravi K\",\n  \"isActive\": true,\n  \"status\": \"ACTIVE\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/technicians/{{technician_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "technicians",
+                                "{{technician_id}}"
+                            ]
+                        },
+                        "description": "Update technician details."
+                    }
+                },
+                {
+                    "name": "Block Technician",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/technicians/{{technician_id}}/block",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "technicians",
+                                "{{technician_id}}",
+                                "block"
+                            ]
+                        },
+                        "description": "Block technician account."
+                    }
+                },
+                {
+                    "name": "Unblock Technician",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/technicians/{{technician_id}}/unblock",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "technicians",
+                                "{{technician_id}}",
+                                "unblock"
+                            ]
+                        },
+                        "description": "Unblock technician account."
+                    }
+                },
+                {
+                    "name": "Toggle Technician Active",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/technicians/{{technician_id}}/toggle-active",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "technicians",
+                                "{{technician_id}}",
+                                "toggle-active"
+                            ]
+                        },
+                        "description": "Toggle technician active flag."
+                    }
+                },
+                {
+                    "name": "Delete Technician",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/technicians/{{technician_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "technicians",
+                                "{{technician_id}}"
+                            ]
+                        },
+                        "description": "Delete technician if not referenced by jobs."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Jobs",
+            "item": [
+                {
+                    "name": "List Jobs",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/job?status=CREATED&search=JOB&technicianId={{technician_id}}&categoryId={{category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "job"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "CREATED"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "JOB"
+                                },
+                                {
+                                    "key": "technicianId",
+                                    "value": "{{technician_id}}"
+                                },
+                                {
+                                    "key": "categoryId",
+                                    "value": "{{category_id}}"
+                                }
+                            ]
+                        },
+                        "description": "List jobs with optional filtering."
+                    }
+                },
+                {
+                    "name": "Create Job",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"customerName\": \"Anil\",\n  \"customerPhone\": \"9000000010\",\n  \"address\": \"HSR Layout, Bengaluru\",\n  \"description\": \"AC not cooling\",\n  \"categoryId\": 1,\n  \"technicianId\": 11,\n  \"scheduleTime\": \"2026-05-20T09:00:00.000Z\",\n  \"totalAmount\": 1200,\n  \"technicianShare\": 840,\n  \"companyShare\": 360\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/job",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "job"
+                            ]
+                        },
+                        "description": "Create a new job."
+                    }
+                },
+                {
+                    "name": "Update Job",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"ASSIGNED\",\n  \"scheduleTime\": \"2026-05-20T10:00:00.000Z\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/job/{{job_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "job",
+                                "{{job_id}}"
+                            ]
+                        },
+                        "description": "Update selected fields of a job."
+                    }
+                },
+                {
+                    "name": "Assign Technician",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"technicianId\": {{technician_id}}\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/job/{{job_id}}/assign",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "job",
+                                "{{job_id}}",
+                                "assign"
+                            ]
+                        },
+                        "description": "Assign/reassign technician for a job."
+                    }
+                },
+                {
+                    "name": "Delete Job",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/job/{{job_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "job",
+                                "{{job_id}}"
+                            ]
+                        },
+                        "description": "Soft delete job."
+                    }
+                },
+                {
+                    "name": "Send Job OTP (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/technicians/job/{{job_id}}/send-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "technicians",
+                                "job",
+                                "{{job_id}}",
+                                "send-otp"
+                            ]
+                        },
+                        "description": "Admin route to generate/send OTP for job completion flow."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Spare Management",
+            "item": [
+                {
+                    "name": "List Spares",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/spares?page=1&limit=20&search=compressor",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "spares"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "compressor"
+                                }
+                            ]
+                        },
+                        "description": "List inventory spares."
+                    }
+                },
+                {
+                    "name": "Create Spare",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Compressor\",\n  \"sku\": \"SP-1001\",\n  \"categoryId\": {{category_id}},\n  \"costPrice\": 900,\n  \"sellingPrice\": 1200,\n  \"stockQty\": 12,\n  \"minStock\": 5\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/spares",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "spares"
+                            ]
+                        },
+                        "description": "Create spare item."
+                    }
+                },
+                {
+                    "name": "Update Spare",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"sellingPrice\": 1300,\n  \"stockQty\": 20\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/spares/{{spare_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "spares",
+                                "{{spare_id}}"
+                            ]
+                        },
+                        "description": "Update spare item."
+                    }
+                },
+                {
+                    "name": "Delete Spare",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/spares/{{spare_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "spares",
+                                "{{spare_id}}"
+                            ]
+                        },
+                        "description": "Soft delete spare."
+                    }
+                },
+                {
+                    "name": "Low Stock Spares",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/spares/low-stock",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "spares",
+                                "low-stock"
+                            ]
+                        },
+                        "description": "Get low-stock spare items."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Custom Spare Request",
+            "item": [
+                {
+                    "name": "List Custom Spare Requests",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/custom-spare/admin/requests?status=PENDING",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "custom-spare",
+                                "admin",
+                                "requests"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "PENDING"
+                                }
+                            ]
+                        },
+                        "description": "Admin list of custom spare requests."
+                    }
+                },
+                {
+                    "name": "Approve Custom Spare Request",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/custom-spare/admin/{{custom_spare_id}}/approve",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "custom-spare",
+                                "admin",
+                                "{{custom_spare_id}}",
+                                "approve"
+                            ]
+                        },
+                        "description": "Approve custom spare request."
+                    }
+                },
+                {
+                    "name": "Reject Custom Spare Request",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"adminNote\": \"Not suitable for inventory\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/custom-spare/admin/{{custom_spare_id}}/reject",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "custom-spare",
+                                "admin",
+                                "{{custom_spare_id}}",
+                                "reject"
+                            ]
+                        },
+                        "description": "Reject custom spare request with optional note."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Scope of Work",
+            "item": [
+                {
+                    "name": "List Pending Scopes",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/scope-of-work/pending",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scope-of-work",
+                                "pending"
+                            ]
+                        },
+                        "description": "List pending scope requests. Note: current backend does not enforce auth middleware here."
+                    }
+                },
+                {
+                    "name": "Get Scopes by Category",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/scope-of-work/by-category/{{category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scope-of-work",
+                                "by-category",
+                                "{{category_id}}"
+                            ]
+                        },
+                        "description": "Get approved scopes by job category."
+                    }
+                },
+                {
+                    "name": "Approve Scope",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/scope-of-work/{{scope_id}}/approve",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scope-of-work",
+                                "{{scope_id}}",
+                                "approve"
+                            ]
+                        },
+                        "description": "Approve scope by id."
+                    }
+                },
+                {
+                    "name": "Reject Scope",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/scope-of-work/{{scope_id}}/reject",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "scope-of-work",
+                                "{{scope_id}}",
+                                "reject"
+                            ]
+                        },
+                        "description": "Reject scope by id."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Payment",
+            "item": [
+                {
+                    "name": "List Payments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/payment?jobId={{job_id}}&status=PENDING",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "payment"
+                            ],
+                            "query": [
+                                {
+                                    "key": "jobId",
+                                    "value": "{{job_id}}"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "PENDING"
+                                }
+                            ]
+                        },
+                        "description": "List payments."
+                    }
+                },
+                {
+                    "name": "Get Payment By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/payment/{{payment_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "payment",
+                                "{{payment_id}}"
+                            ]
+                        },
+                        "description": "Get payment details by id."
+                    }
+                },
+                {
+                    "name": "Create Payment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"jobId\": {{job_id}},\n  \"amount\": 1200,\n  \"method\": \"UPI\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/payment/create",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "payment",
+                                "create"
+                            ]
+                        },
+                        "description": "Create payment record."
+                    }
+                },
+                {
+                    "name": "Mark Payment Paid",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"transactionId\": \"TXN123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/payment/{{payment_id}}/mark-paid",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "payment",
+                                "{{payment_id}}",
+                                "mark-paid"
+                            ]
+                        },
+                        "description": "Mark payment status as PAID."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Wallet and Payout",
+            "item": [
+                {
+                    "name": "List Payouts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/wallet/admin/payouts?technicianId={{technician_id}}&status=PENDING",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "wallet",
+                                "admin",
+                                "payouts"
+                            ],
+                            "query": [
+                                {
+                                    "key": "technicianId",
+                                    "value": "{{technician_id}}"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "PENDING"
+                                }
+                            ]
+                        },
+                        "description": "List payout requests."
+                    }
+                },
+                {
+                    "name": "Approve Payout",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"adminNote\": \"Approved after verification\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/wallet/admin/payout/{{payout_id}}/approve",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "wallet",
+                                "admin",
+                                "payout",
+                                "{{payout_id}}",
+                                "approve"
+                            ]
+                        },
+                        "description": "Approve payout request."
+                    }
+                },
+                {
+                    "name": "Mark Payout Paid",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/wallet/admin/payout/{{payout_id}}/pay",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "wallet",
+                                "admin",
+                                "payout",
+                                "{{payout_id}}",
+                                "pay"
+                            ]
+                        },
+                        "description": "Mark approved payout as paid and debit wallet."
+                    }
+                },
+                {
+                    "name": "Wallet Overview",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/wallet/admin/wallets",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "wallet",
+                                "admin",
+                                "wallets"
+                            ]
+                        },
+                        "description": "Wallet balances across technicians."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Reports",
+            "item": [
+                {
+                    "name": "Revenue Report",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/revenue/report",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "revenue",
+                                "report"
+                            ]
+                        },
+                        "description": "Revenue summary report for admin dashboard/reporting."
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:4000"
+        },
+        {
+            "key": "admin_token",
+            "value": ""
+        },
+        {
+            "key": "technician_id",
+            "value": "11"
+        },
+        {
+            "key": "job_id",
+            "value": "101"
+        },
+        {
+            "key": "spare_id",
+            "value": "10"
+        },
+        {
+            "key": "category_id",
+            "value": "1"
+        },
+        {
+            "key": "payout_id",
+            "value": "51"
+        },
+        {
+            "key": "scope_id",
+            "value": "21"
+        },
+        {
+            "key": "custom_spare_id",
+            "value": "1"
+        },
+        {
+            "key": "payment_id",
+            "value": "31"
+        }
+    ]
+}
